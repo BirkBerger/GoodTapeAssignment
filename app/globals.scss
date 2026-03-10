@@ -1,0 +1,19 @@
+@import "tailwindcss";
+
+:root {
+    background: linear-gradient(90deg,rgba(221, 202, 237, 1) 18%, rgba(245, 222, 105, 1) 69%, rgba(233, 220, 245, 1) 83%);
+}
+
+body {
+    margin: 0;
+    font-family: var(--font-geist-sans);
+}
+
+h1, h2, h3, button {
+    font-family: var(--header-font);
+}
+
+h1 {
+    font-size: 24px;
+    font-weight: bold;
+}
