@@ -6,7 +6,7 @@ To get project
 
 ```bash
 git clone https://github.com/BirkBerger/GoodTapeAssignment.git
-cd good-tape-assignment
+cd GoodTapeAssignment
 ```
 
 To run project
