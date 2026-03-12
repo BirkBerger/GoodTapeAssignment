@@ -11,31 +11,60 @@ export interface Story {
     deleted: boolean;
 }
 
+const CACHE_KEY_PREFIX = 'story_';
+
 class HackerNewsService {
 
-    private getStoryIds = async (limit: number): Promise<number[]> => {
+    // Save storyIds locally to ensure fetching only once per session
+    // - a reload should update top stories
+    private storedIds: number[] = [];
+
+    // Save every fetched story in local storage to improve performance
+    private setCachedStory = (story: Story) => {
+        localStorage.setItem(`${CACHE_KEY_PREFIX}${story.id}`, JSON.stringify(story))
+    }
+
+    private getCachedStory = (id: number) => {
+        const raw = localStorage.getItem(`${CACHE_KEY_PREFIX}${id}`);
+        return raw ? JSON.parse(raw) : null;
+    }
+
+    // Fetch IDs of top 500 stories
+    private getStoryIds = async (): Promise<number[]> => {
         return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hackernews/topstories`)
         .then((res: Response) => res.json())
-        .then((resJson) => resJson.data.slice(0, limit))
+        .then((resJson) => {
+            this.storedIds = resJson.data;
+            return this.storedIds;
+        })
         .catch((err) => {
             console.error(err);
             return [];
         })
     }
 
-    private getStory = async (id: number): Promise<Story> => {
+    // Fetch story by ID
+    public getStory = async (id: number): Promise<Story> => {
+        const cached = this.getCachedStory(id);
+        if (cached) return cached;
+
         return fetch(`${process.env.NEXT_PUBLIC_API_URL}/api/hackernews/item/?id=${id}`)
         .then((res) => res.json())
-        .then((resJson) => resJson.data)
+        .then((resJson) => {
+            const story = resJson.data;
+            this.setCachedStory(story);
+            return story;
+        })
         .catch((err) => {
             console.error(err);
             return [];
         })
     }
 
-    public getStories = async (limit: number): Promise<Story[]> => {
-        const ids = await this.getStoryIds(limit);
-        return Promise.all(ids.map((id) => this.getStory(id)));
+    // Fetch slice of top stories
+    public getStories = async (idxStart: number, idxEnd: number): Promise<Story[]> => {
+        const ids = this.storedIds.length > 0 ? this.storedIds : await this.getStoryIds();
+        return Promise.all(ids.slice(idxStart, idxEnd).map((id) => this.getStory(id)));
     }
 
 }
