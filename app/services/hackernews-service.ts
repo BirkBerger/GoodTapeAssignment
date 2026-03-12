@@ -67,6 +67,10 @@ class HackerNewsService {
         return Promise.all(ids.slice(idxStart, idxEnd).map((id) => this.getStory(id)));
     }
 
+    public getComments = async (ids: number[]): Promise<Story[]> => {
+        return Promise.all(ids.map((id) => this.getStory(id)));
+    }
+
 }
 
 export default new HackerNewsService();
